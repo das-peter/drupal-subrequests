@@ -1,0 +1,17 @@
+services:
+  subrequests.blueprint_parser:
+    class: 'Drupal\subrequests\Blueprint\Parser'
+    arguments: ['@serializer']
+  subrequests.subresponse.subscriber:
+    class: Drupal\subrequests\EventSubscriber\SubresponseSubscriber
+    tags:
+      - { name: event_subscriber }
+    arguments: ['@current_route_match']
+  subrequests.denormalizer.bluprint.json:
+    class: Drupal\subrequests\Normalizer\JsonBlueprintDenormalizer
+    tags:
+      - { name: normalizer, priority: 0 }
+  subrequests.normalizer.multiresponse:
+    class: Drupal\subrequests\Normalizer\MultiresponseNormalizer
+    tags:
+      - { name: normalizer, priority: 0 }
