@@ -25,7 +25,7 @@ class JsonSubrequestDenormalizer implements DenormalizerInterface {
       throw new \RuntimeException('The provided blueprint contains an invalid subrequest.');
     }
     $data['path'] = parse_url($data['path'], PHP_URL_PATH);
-    if (!is_array($data['query'])) {
+    if (isset($data['query']) && !is_array($data['query'])) {
       $query = array();
       parse_str($data['query'], $query);
       $data['query'] = $query;
@@ -43,10 +43,10 @@ class JsonSubrequestDenormalizer implements DenormalizerInterface {
       $data['path'],
       static::getMethodFromAction($data['action']),
       empty($data['body']) ? $data['query'] : $data['body'],
-      $master_request->cookies,
-      $master_request->files,
-      $master_request->server,
-      NULL
+      $master_request->cookies ? (array) $master_request->cookies->getIterator() : [],
+      $master_request->files ? (array) $master_request->files->getIterator() : [],
+      $master_request->server ? (array) $master_request->server->getIterator() : [],
+      empty($data['body']) ? '' : $data['body']
     );
     // Maintain the same session as in the master request.
     $request->setSession($master_request->getSession());
@@ -57,7 +57,7 @@ class JsonSubrequestDenormalizer implements DenormalizerInterface {
     $content_id = empty($data['requestId'])
       ? md5(serialize($data))
       : $data['requestId'];
-    $request->headers->add(['Content-ID', ['<' . $content_id . '>']]);
+    $request->headers->set('Content-ID', '<' . $content_id . '>');
 
     return $request;
   }

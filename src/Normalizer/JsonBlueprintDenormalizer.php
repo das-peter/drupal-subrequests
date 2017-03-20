@@ -32,8 +32,8 @@ class JsonBlueprintDenormalizer implements DenormalizerInterface, SerializerAwar
    */
   public function denormalize($data, $class, $format = NULL, array $context = array()) {
     // The top level is an array of normalized requests.
-    $requests = array_map(function ($item) use ($format) {
-      return $this->serializer->denormalize($item, Request::class, $format);
+    $requests = array_map(function ($item) use ($format, $context) {
+      return $this->serializer->denormalize($item, Request::class, $format, $context);
     }, $data);
     return new RequestTree($requests);
   }

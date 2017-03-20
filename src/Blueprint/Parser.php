@@ -45,9 +45,10 @@ class Parser {
     $tree = $this->serializer->deserialize(
       $request->getContent(),
       RequestTree::class,
-      $request->getRequestFormat()
+      $request->getRequestFormat(),
+      ['master_request' => $request]
     );
-    $request->attributes->add(RequestTree::SUBREQUEST_TREE, $tree);
+    $request->attributes->set(RequestTree::SUBREQUEST_TREE, $tree);
     // It assumed that all subrequests use the same Mime-Type.
     $this->type = $request->getMimeType($request->getRequestFormat());
   }
@@ -71,7 +72,7 @@ class Parser {
     $headers = ['Content-Type' => $content_type];
 
     $context = ['delimiter' => $delimiter];
-    $content = $this->serializer->serialize($responses, 'multipart-related', $context);
+    $content = $this->serializer->normalize($responses, 'multipart-related', $context);
     return Response::create($content, 207, $headers);
   }
 

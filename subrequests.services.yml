@@ -11,6 +11,10 @@ services:
     class: Drupal\subrequests\Normalizer\JsonBlueprintDenormalizer
     tags:
       - { name: normalizer, priority: 0 }
+  subrequests.denormalizer.subrequest.json:
+    class: Drupal\subrequests\Normalizer\JsonSubrequestDenormalizer
+    tags:
+      - { name: normalizer, priority: 0 }
   subrequests.normalizer.multiresponse:
     class: Drupal\subrequests\Normalizer\MultiresponseNormalizer
     tags:

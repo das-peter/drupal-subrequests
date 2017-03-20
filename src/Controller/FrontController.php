@@ -62,10 +62,9 @@ class FrontController extends ControllerBase {
       }, []);
       // Handle the requests for the trees at this level and gather the
       // responses.
-      $level_responses = array_map(array(
-        $this->httpKernel,
-        'handle',
-      ), $requests);
+      $level_responses = array_map(function (Request $request) {
+        return $this->httpKernel->handle($request, HttpKernelInterface::SUB_REQUEST);
+      }, $requests);
       $responses = array_merge(
         $responses,
         $level_responses

@@ -19,6 +19,12 @@ class SubresponseSubscriber implements EventSubscriberInterface {
   public function onResponse(FilterResponseEvent $event) {
     $request = $event->getRequest();
     $request->attributes->set(RequestTree::SUBREQUEST_DONE, TRUE);
+    // Carry over the Content ID header from the request to the response.
+    $header_name = 'Content-ID';
+    $event->getResponse()->headers->set(
+      $header_name,
+      $request->headers->get($header_name)
+    );
   }
 
   /**
@@ -26,7 +32,7 @@ class SubresponseSubscriber implements EventSubscriberInterface {
    */
   public static function getSubscribedEvents() {
     // Run shortly before \Drupal\Core\EventSubscriber\FinishResponseSubscriber.
-    $events[KernelEvents::RESPONSE][] = ['onResponse', 5];
+    $events[KernelEvents::RESPONSE][] = ['onResponse'];
     return $events;
   }
 

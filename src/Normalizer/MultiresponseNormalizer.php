@@ -5,7 +5,6 @@ namespace Drupal\subrequests\Normalizer;
 
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
-use Symfony\Component\Serializer\Normalizer\scalar;
 
 class MultiresponseNormalizer implements NormalizerInterface {
 
@@ -17,8 +16,9 @@ class MultiresponseNormalizer implements NormalizerInterface {
     $separator = sprintf("\r\n--%s\r\n", $delimiter);
     // Join the content responses with the separator.
     $content_items = array_map(function (Response $part_response) {
+      $part_response->headers->set('Status', $part_response->getStatusCode());
       return sprintf(
-        "%s\r\n\r\n%s",
+        "%s\r \n%s",
         $part_response->headers,
         $part_response->getContent()
       );
@@ -30,7 +30,7 @@ class MultiresponseNormalizer implements NormalizerInterface {
    * {@inheritdoc}
    */
   public function supportsNormalization($data, $format = NULL) {
-    if ($format !== 'multipart-response') {
+    if ($format !== 'multipart-related') {
       return FALSE;
     }
     if (!is_array($data)) {
