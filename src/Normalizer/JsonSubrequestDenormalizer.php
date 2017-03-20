@@ -3,11 +3,12 @@
 
 namespace Drupal\subrequests\Normalizer;
 
+use Drupal\Component\Utility\NestedArray;
 use Drupal\subrequests\Blueprint\Parser;
+use Drupal\subrequests\Blueprint\RequestTree;
 use Symfony\Component\HttpFoundation\HeaderBag;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
-use Drupal\Component\Utility\NestedArray;
 
 class JsonSubrequestDenormalizer implements DenormalizerInterface {
   /**
@@ -58,6 +59,12 @@ class JsonSubrequestDenormalizer implements DenormalizerInterface {
       ? md5(serialize($data))
       : $data['requestId'];
     $request->headers->set('Content-ID', '<' . $content_id . '>');
+    $request->attributes->set(RequestTree::SUBREQUEST_ID, $content_id);
+    // If there is a parent, then add the ID to construct the tree.
+    if (!empty($data['waitFor'])) {
+      $request->attributes
+        ->set(RequestTree::SUBREQUEST_PARENT_ID, $data['waitFor']);
+    }
 
     return $request;
   }

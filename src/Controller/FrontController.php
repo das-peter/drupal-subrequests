@@ -52,6 +52,11 @@ class FrontController extends ControllerBase {
     $trees = [$root_tree];
     // Handle all the sub-requests.
     while (!$root_tree->isDone()) {
+      // Requests in the current level may have references to older responses.
+      // This step resolves those.
+      array_walk($trees, function (RequestTree $tree) use ($responses) {
+        $tree->dereference($responses);
+      });
       // Get all the requests in the trees for the previous pass.
       $requests = array_reduce($trees, function (array $carry, RequestTree $tree) {
         return array_merge($carry, $tree->getRequests());

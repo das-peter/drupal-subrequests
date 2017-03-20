@@ -35,7 +35,33 @@ class JsonBlueprintDenormalizer implements DenormalizerInterface, SerializerAwar
     $requests = array_map(function ($item) use ($format, $context) {
       return $this->serializer->denormalize($item, Request::class, $format, $context);
     }, $data);
-    return new RequestTree($requests);
+    // We want to create one tree per parent, but for that we need to identify
+    // the parents first.
+    $requests_per_parent = array_reduce($requests, function (array $carry, Request $request) {
+      $parent_id = $request->attributes
+        ->get(RequestTree::SUBREQUEST_PARENT_ID, RequestTree::ROOT_TREE_ID);
+      if (empty($carry[$parent_id])) {
+        $carry[$parent_id] = [];
+      }
+      $carry[$parent_id][] = $request;
+      return $carry;
+    }, []);
+    // Now get all the requests for the root parent to create the root tree.
+    $root_tree = new RequestTree($requests_per_parent[RequestTree::ROOT_TREE_ID]);
+    unset($requests_per_parent[RequestTree::ROOT_TREE_ID]);
+
+    // Iterate through all the parents to find them in the tree. The attach the
+    // sub-tree to the root.
+    // TODO: If a tree hangs from a parent that is not attached to the root, then this process may fail.
+    foreach ($requests_per_parent as $parent_id => $children_requests) {
+      $parent_request = $root_tree->getDescendant($parent_id);
+      $parent_request->attributes->set(
+        RequestTree::SUBREQUEST_TREE,
+        new RequestTree($children_requests)
+      );
+    }
+
+    return $root_tree;
   }
 
   /**
