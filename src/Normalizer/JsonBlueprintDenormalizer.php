@@ -54,10 +54,13 @@ class JsonBlueprintDenormalizer implements DenormalizerInterface, SerializerAwar
     // sub-tree to the root.
     // TODO: If a tree hangs from a parent that is not attached to the root, then this process may fail.
     foreach ($requests_per_parent as $parent_id => $children_requests) {
-      $parent_request = $root_tree->getDescendant($parent_id);
+      $parent_requests = array_filter($requests, function (Request $request) use ($parent_id) {
+        return $request->attributes->get(RequestTree::SUBREQUEST_ID) == $parent_id;
+      });
+      $parent_request = reset($parent_requests);
       $parent_request->attributes->set(
         RequestTree::SUBREQUEST_TREE,
-        new RequestTree($children_requests)
+        new RequestTree($children_requests, $parent_id)
       );
     }
 
