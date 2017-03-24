@@ -55,6 +55,7 @@ class JsonSubrequestDenormalizer implements DenormalizerInterface {
     $request->setSession($master_request->getSession());
     // Replace the headers by the ones in the subrequest.
     $request->headers = new HeaderBag($data['headers']);
+    $this::fixBasicAuth($request);
 
     // Add the content ID to the sub-request.
     $content_id = empty($data['requestId'])
@@ -116,4 +117,22 @@ class JsonSubrequestDenormalizer implements DenormalizerInterface {
     }
   }
 
+  /**
+   * Adds the decoded username and password headers for Basic Auth.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The request to fix.
+   */
+  protected static function fixBasicAuth(Request $request) {
+    // The server will not set the PHP_AUTH_USER and PHP_AUTH_PW for the
+    // subrequests if needed.
+    if ($request->headers->has('Authorization')) {
+      $header = $request->headers->get('Authorization');
+      if (strpos($header, 'Basic ') === 0) {
+        list($user, $pass) = explode(':', base64_decode(substr($header, 6)));
+        $request->headers->set('PHP_AUTH_USER', $user);
+        $request->headers->set('PHP_AUTH_PW', $pass);
+      }
+    }
+  }
 }

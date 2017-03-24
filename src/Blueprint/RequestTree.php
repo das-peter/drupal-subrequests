@@ -293,6 +293,7 @@ class RequestTree {
       (array) $request->server->getIterator(),
       $content
     );
+    // Set the sub-request headers.
     foreach ($request->headers as $key => $val) {
       $new_request->headers->set($key, $val);
     }
