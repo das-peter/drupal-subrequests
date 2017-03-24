@@ -293,6 +293,9 @@ class RequestTree {
       (array) $request->server->getIterator(),
       $content
     );
+    foreach ($request->headers as $key => $val) {
+      $new_request->headers->set($key, $val);
+    }
     $new_request->headers->set('Content-ID', sprintf('<%s>', $id));
     $new_request->attributes->set(static::SUBREQUEST_PARENT_ID, $parent_id);
     $new_request->attributes->set(static::SUBREQUEST_ID, $id);

@@ -6,5 +6,6 @@ subrequests.front-controller:
   methods: [POST]
   options:
     no_cache: TRUE
+    _auth: ['basic_auth', 'cookie', 'oauth2']
   requirements:
     _permission: 'issue subrequests'

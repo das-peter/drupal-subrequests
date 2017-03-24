@@ -3,6 +3,7 @@
 
 namespace Drupal\subrequests\Normalizer;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\subrequests\Blueprint\Parser;
 use Drupal\subrequests\Blueprint\RequestTree;
@@ -32,11 +33,11 @@ class JsonSubrequestDenormalizer implements DenormalizerInterface {
       parse_str($data['query'], $query);
       $data['query'] = $query;
     }
-    $data = NestedArray::mergeDeep($data, [
-      'body' => [],
+    $data = NestedArray::mergeDeep([
+      'body' => '',
       'query' => [],
       'headers' => [],
-    ], parse_url($data['path']));
+    ], $data, parse_url($data['path']));
 
     /** @var \Symfony\Component\HttpFoundation\Request $master_request */
     $master_request = $context['master_request'];
@@ -44,7 +45,7 @@ class JsonSubrequestDenormalizer implements DenormalizerInterface {
     $request = Request::create(
       $data['path'],
       static::getMethodFromAction($data['action']),
-      empty($data['body']) ? $data['query'] : $data['body'],
+      empty($data['body']) ? $data['query'] : Json::decode($data['body']),
       $master_request->cookies ? (array) $master_request->cookies->getIterator() : [],
       $master_request->files ? (array) $master_request->files->getIterator() : [],
       $master_request->server ? (array) $master_request->server->getIterator() : [],
