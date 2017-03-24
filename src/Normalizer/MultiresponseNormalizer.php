@@ -11,7 +11,7 @@ class MultiresponseNormalizer implements NormalizerInterface {
   /**
    * {@inheritdoc}
    */
-  public function normalize($object, $format = NULL, array $context = array()) {
+  public function normalize($object, $format = NULL, array $context = []) {
     $delimiter = $context['delimiter'];
     $separator = sprintf("\r\n--%s\r\n", $delimiter);
     // Join the content responses with the separator.

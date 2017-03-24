@@ -21,21 +21,22 @@ class JsonSubrequestDenormalizer implements DenormalizerInterface {
    *
    * @return object
    */
-  public function denormalize($data, $class, $format = NULL, array $context = array()) {
+  public function denormalize($data, $class, $format = NULL, array $context = []) {
     if (!Parser::isValidSubrequest($data)) {
       throw new \RuntimeException('The provided blueprint contains an invalid subrequest.');
     }
-    $data['path'] = parse_url($data['path'], PHP_URL_PATH);
+    $data['path'] = parse_url($data['uri'], PHP_URL_PATH);
+    $data['query'] = parse_url($data['uri'], PHP_URL_QUERY);
     if (isset($data['query']) && !is_array($data['query'])) {
-      $query = array();
+      $query = [];
       parse_str($data['query'], $query);
       $data['query'] = $query;
     }
-    $data = NestedArray::mergeDeep($data, array(
-      'query' => array(),
-      'body' => array(),
-      'headers' => array(),
-    ), parse_url($data['path']));
+    $data = NestedArray::mergeDeep($data, [
+      'body' => [],
+      'query' => [],
+      'headers' => [],
+    ], parse_url($data['path']));
 
     /** @var \Symfony\Component\HttpFoundation\Request $master_request */
     $master_request = $context['master_request'];
