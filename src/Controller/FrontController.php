@@ -68,7 +68,15 @@ class FrontController extends ControllerBase {
       // Handle the requests for the trees at this level and gather the
       // responses.
       $level_responses = array_map(function (Request $request) {
-        return $this->httpKernel->handle($request, HttpKernelInterface::MASTER_REQUEST);
+        $response = $this->httpKernel->handle($request, HttpKernelInterface::MASTER_REQUEST);
+        // Manually mark the request as done. We cannot use a response
+        // subscriber, since it may not fire if the subrequest is cached by
+        // PageCache.
+        $request->attributes->set(RequestTree::SUBREQUEST_DONE, TRUE);
+        $id = $request->headers->get('Content-ID');
+        $response->headers->set('Content-ID', $id);
+
+        return $response;
       }, $requests);
       $responses = array_merge(
         $responses,
