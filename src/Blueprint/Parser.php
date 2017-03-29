@@ -3,6 +3,8 @@
 
 namespace Drupal\subrequests\Blueprint;
 
+use Drupal\Core\Cache\CacheableResponse;
+use Drupal\Core\Cache\CacheableResponseInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\SerializerInterface;
@@ -42,8 +44,15 @@ class Parser {
    *     - Request mime-type.
    */
   public function parseRequest(Request $request) {
+    $data = '';
+    if ($request->getMethod() === Request::METHOD_POST) {
+      $data = $request->getContent();
+    }
+    else if ($request->getMethod() === Request::METHOD_GET) {
+      $data = $request->query->get('query', '');
+    }
     $tree = $this->serializer->deserialize(
-      $request->getContent(),
+      $data,
       RequestTree::class,
       $request->getRequestFormat(),
       ['master_request' => $request]
@@ -72,8 +81,18 @@ class Parser {
     $headers = ['Content-Type' => $content_type];
 
     $context = ['delimiter' => $delimiter];
+    // Set the content.
     $content = $this->serializer->normalize($responses, 'multipart-related', $context);
-    return Response::create($content, 207, $headers);
+    $response = CacheableResponse::create($content, 207, $headers);
+    // Set the cacheability metadata.
+    $cacheable_responses = array_filter($responses, function ($response) {
+      return $response instanceof CacheableResponseInterface;
+    });
+    array_walk($cacheable_responses, function (CacheableResponseInterface $partial_response) use ($response) {
+      $response->addCacheableDependency($partial_response->getCacheableMetadata());
+    });
+
+    return $response;
   }
 
   /**

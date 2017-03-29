@@ -158,8 +158,13 @@ class RequestTree {
       $uri = $request->getUri();
       $changes += static::replaceAllOccurrences($responses, $uri);
       foreach ($request->query as $key => $value) {
-        $changes += static::replaceAllOccurrences($responses, $value);
-        $request->query->set($key, $value);
+        $new_key = $key;
+        $query_changes = static::replaceAllOccurrences($responses, $new_key);
+        $query_changes += static::replaceAllOccurrences($responses, $value);
+        if ($query_changes) {
+          $request->query->remove($key);
+          $request->query->set($new_key, $value);
+        }
       }
 
       // If there is anything to update.
@@ -211,6 +216,21 @@ class RequestTree {
    *   The number of replacements made.
    */
   public static function replaceAllOccurrences(array $responses, &$input) {
+    if (is_array($input)) {
+      $changes = 0;
+      // Apply the replacement recursively on the array keys and values.
+      foreach ($input as $key => $value) {
+        $new_key = $key;
+        $local_changes = static::replaceAllOccurrences($responses, $new_key);
+        $local_changes += static::replaceAllOccurrences($responses, $value);
+        $changes += $local_changes;
+        if ($local_changes) {
+          unset($input[$key]);
+          $input[$new_key] = $value;
+        }
+      }
+      return $changes;
+    }
     // Detect {{/foo#/bar}}
     $pattern = '/\{\{\/([^\{\}]+)@(\/[^\{\}]+)\}\}/';
     $matches = [];

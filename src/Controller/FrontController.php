@@ -8,6 +8,7 @@ use Drupal\subrequests\Blueprint\Parser;
 use Drupal\subrequests\Blueprint\RequestTree;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 class FrontController extends ControllerBase {

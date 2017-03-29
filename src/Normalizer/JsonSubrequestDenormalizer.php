@@ -27,7 +27,7 @@ class JsonSubrequestDenormalizer implements DenormalizerInterface {
       throw new \RuntimeException('The provided blueprint contains an invalid subrequest.');
     }
     $data['path'] = parse_url($data['uri'], PHP_URL_PATH);
-    $data['query'] = parse_url($data['uri'], PHP_URL_QUERY);
+    $data['query'] = parse_url($data['uri'], PHP_URL_QUERY) ?: [];
     if (isset($data['query']) && !is_array($data['query'])) {
       $query = [];
       parse_str($data['query'], $query);
@@ -35,7 +35,6 @@ class JsonSubrequestDenormalizer implements DenormalizerInterface {
     }
     $data = NestedArray::mergeDeep([
       'body' => '',
-      'query' => [],
       'headers' => [],
     ], $data, parse_url($data['path']));
 
@@ -48,13 +47,15 @@ class JsonSubrequestDenormalizer implements DenormalizerInterface {
       empty($data['body']) ? $data['query'] : Json::decode($data['body']),
       $master_request->cookies ? (array) $master_request->cookies->getIterator() : [],
       $master_request->files ? (array) $master_request->files->getIterator() : [],
-      $master_request->server ? (array) $master_request->server->getIterator() : [],
+      [],
       empty($data['body']) ? '' : $data['body']
     );
     // Maintain the same session as in the master request.
     $request->setSession($master_request->getSession());
     // Replace the headers by the ones in the subrequest.
-    $request->headers = new HeaderBag($data['headers']);
+    foreach ($data['headers'] as $name => $value) {
+      $request->headers->set($name, $value);
+    }
     $this::fixBasicAuth($request);
 
     // Add the content ID to the sub-request.
