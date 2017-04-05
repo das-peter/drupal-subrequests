@@ -76,6 +76,11 @@ controller that processes the request blueprint. The content type header will
 determine what format is used in the blueprint. All the examples in this
 document assume `application/json` as the content type.
 
+You **MAY** send the blueprint document as the payload in a `POST` request.
+Alternatively, you **MAY** also send it in a `GET` request as a [percent
+encoded](https://tools.ietf.org/html/rfc3986#section-2.1) string in a query
+string parameter with the name of `query`.
+
 The blueprint document **MUST** be an array of subrequests. Each one of these
 subrequests **SHOULD** contain at least the following properties:
 
