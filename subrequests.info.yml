@@ -4,3 +4,4 @@ description: 'Add a front controller that you can use to make subrequests.'
 core: 8.x
 dependencies:
   - serialization
+package: Web services
