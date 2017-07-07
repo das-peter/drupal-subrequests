@@ -18,7 +18,7 @@ class MultiresponseNormalizer implements NormalizerInterface {
     $content_items = array_map(function (Response $part_response) {
       $part_response->headers->set('Status', $part_response->getStatusCode());
       return sprintf(
-        "%s\r \n%s",
+        "%s\r\n%s",
         $part_response->headers,
         $part_response->getContent()
       );
