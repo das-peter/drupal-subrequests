@@ -1,11 +1,13 @@
 <?php
 
-
 namespace Drupal\subrequests\Normalizer;
 
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
+/**
+ * Normalizes multiple response objects into a single string.
+ */
 class MultiresponseNormalizer implements NormalizerInterface {
 
   /**
