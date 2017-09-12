@@ -127,12 +127,14 @@ responses to previous subrequests in the same blueprint.
 
 The format of the replacement token is:
 ```
-{{/<request-id>@<data-pointer>}}
+{{/<request-id>.<location>@<json-path-expression>}}
 ```
 
 The replacement data will be extracted from the response to the request
 indicated by the request ID in the replacement token. The specific data in that
-response to be embedded will be selected using a data pointer.
+response to be embedded will be selected using a json path. If the JSON path
+expression resolves more than one result, then multiple responses will be
+generated for that single request.
 
 A data pointer is a string that specifies what part of the referenced response
 should be embedded in place of the token. The embedded data **SHOULD** be
@@ -165,7 +167,7 @@ the request blueprint to express dependencies.
   {
     "requestId": "req-2",
     "waitFor": "req-1",
-    "uri": "/menus/{{/req-1@/rels/menu/id}}",
+    "uri": "/menus/{{req-1.body@$.rels.meny.id}}",
     "action": "view",
     "headers": {
       "Accept": "application/json"
@@ -174,7 +176,7 @@ the request blueprint to express dependencies.
   {
     "requestId": "req-3",
     "waitFor": "req-2",
-    "uri": "/menus/{{/req-1@/rels/menu/id}}/courses/{{/req-2@/mainCourse/id}}",
+    "uri": "/menus/{{req-1.body@$.rels.meny.id}}/courses/{{req-2.body@$.mainCourse.id}}",
     "action": "view",
     "headers": {
       "Accept": "application/json"
@@ -183,12 +185,14 @@ the request blueprint to express dependencies.
 ]
 ```
 
-This example shows how the request for the restaurant menu needs information
-from the request to the response to _req-1_. It also shows that _req-3_ depends
-on both _req-1_ and _req-2_ to compose the request.
+This example shows how the request for the restaurant menu needs information in
+the body from the request to the response to _req-1_. It also shows that
+_req-3_ depends on both _req-1_ and _req-2_ to compose the request.
 
 # Response format
-Once all the requests have been processed and the corresponding responses have been generated, the server **MUST** give a single response to the master request containing the responses to all subrequests.
+Once all the requests have been processed and the corresponding responses have
+been generated, the server **MUST** give a single response to the master
+request containing the responses to all subrequests.
 
 The response **MUST** use the 207 response code for multiple status, since each
 partial response will specify the status for their requests. In addition to that
