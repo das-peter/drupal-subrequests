@@ -3,9 +3,6 @@
 namespace Drupal\subrequests\Normalizer;
 
 use Drupal\Component\Serialization\Json;
-use Drupal\Component\Utility\NestedArray;
-use Drupal\subrequests\Blueprint\Parser;
-use Drupal\subrequests\Blueprint\RequestTree;
 use Drupal\subrequests\Subrequest;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
@@ -46,10 +43,10 @@ class JsonSubrequestDenormalizer implements DenormalizerInterface {
       $path,
       static::getMethodFromAction($data->action),
       empty($data->body) ? $query : $data->body,
-      $master_request->cookies ? (array) $master_request->cookies->getIterator() : [],
-      $master_request->files ? (array) $master_request->files->getIterator() : [],
+      $master_request->cookies ? $master_request->cookies->all() : [],
+      $master_request->files ? $master_request->files->all() : [],
       [],
-      empty($data->body) ? '' : $data->body
+      empty($data->body) ? '' : Json::encode($data->body)
     );
     // Maintain the same session as in the master request.
     $session = $master_request->getSession();
