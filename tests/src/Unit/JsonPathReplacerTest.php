@@ -29,7 +29,7 @@ class JsonPathReplacerTest extends UnitTestCase {
   public function testReplaceBatch() {
     $batch = $responses = [];
     $batch[] = new Subrequest([
-      'uri' => '/ipsum/{{foo.body@$.things[*]}}',
+      'uri' => '/ipsum/{{foo.body@$.things[*]}}/{{bar.body@$.things[*]}}',
       'action' => 'sing',
       'requestId' => 'oop',
       'headers' => [],
@@ -49,12 +49,27 @@ class JsonPathReplacerTest extends UnitTestCase {
     $response = Response::create('{"things":["what","keep","talking"],"stuff":42}');
     $response->headers->set('Content-ID', '<foo>');
     $responses[] = $response;
+    $response = Response::create('{"things":["the","plane","is"],"stuff":"delayed"}');
+    $response->headers->set('Content-ID', '<bar>');
+    $responses[] = $response;
     $actual = $this->sut->replaceBatch($batch, $responses);
-    $this->assertCount(4, $actual);
+    $this->assertCount(10, $actual);
     $paths = array_map(function (Subrequest $subrequest) {
       return $subrequest->uri;
     }, $actual);
-    $this->assertEquals(['/ipsum/what', '/ipsum/keep', '/ipsum/talking', '/dolor/42'], $paths);
+    $expected_paths = [
+      '/ipsum/what/the',
+      '/ipsum/keep/the',
+      '/ipsum/talking/the',
+      '/ipsum/what/plane',
+      '/ipsum/keep/plane',
+      '/ipsum/talking/plane',
+      '/ipsum/what/is',
+      '/ipsum/keep/is',
+      '/ipsum/talking/is',
+      '/dolor/42',
+    ];
+    $this->assertEquals($expected_paths, $paths);
     $this->assertEquals(['answer' => 42], $actual[0]->body);
   }
 
