@@ -56,18 +56,18 @@ class JsonBlueprintDenormalizerTest extends UnitTestCase {
       'action' => 'sing',
       'requestId' => 'oop',
       'body' => '[]',
-      'waitFor' => 'foo',
+      'waitFor' => ['foo'],
     ];
     $subrequests[] = [
       'uri' => 'lorem',
       'action' => 'create',
       'requestId' => 'oof',
       'body' => '"bar"',
-      'waitFor' => 'foo',
+      'waitFor' => ['foo'],
     ];
     $actual = $this->sut->denormalize($subrequests, SubrequestsTree::class, 'json', []);
     $tree = new SubrequestsTree();
-    $tree->stack([new Subrequest(['waitFor' => '<ROOT>', '_resolved' => FALSE, 'body' => 'bar'] + $subrequests[0])]);
+    $tree->stack([new Subrequest(['waitFor' => ['<ROOT>'], '_resolved' => FALSE, 'body' => 'bar'] + $subrequests[0])]);
     $tree->stack([
       new Subrequest(['headers' => [], '_resolved' => FALSE, 'body' => []] + $subrequests[1]),
       new Subrequest(['headers' => [], '_resolved' => FALSE, 'body' => 'bar'] + $subrequests[2])

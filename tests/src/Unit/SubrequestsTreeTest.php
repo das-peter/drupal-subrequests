@@ -30,7 +30,7 @@ class SubrequestsTreeTest extends UnitTestCase {
       'requestId' => 1,
       'body' => '',
       'headers' => [],
-      'waitFor' => 1,
+      'waitFor' => [1],
       '_resolved' => FALSE,
       'uri' => '',
       'action' => '',

@@ -67,4 +67,22 @@ class SubrequestsTree extends \ArrayObject {
     $this->masterRequest = $request;
   }
 
+  /**
+   * Gets all the subrequest IDs.
+   *
+   * @return \Drupal\subrequests\Subrequest[]
+   *   All the subrequests in all levels.
+   */
+  public function allIds() {
+    $subrequests = [];
+    foreach ($this as $item) {
+      $subrequests = array_merge($subrequests, array_values($item));
+    }
+    $all_request_ids = array_map(function (Subrequest $subrequest) {
+      return $subrequest->requestId;
+    }, $subrequests);
+    array_unshift($all_request_ids, '<ROOT>');
+    return array_unique($all_request_ids);
+  }
+
 }

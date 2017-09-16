@@ -4,12 +4,10 @@ namespace Drupal\subrequests\Normalizer;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Uuid\Php;
-use Drupal\subrequests\Blueprint\RequestTree;
 use Drupal\subrequests\Subrequest;
 use Drupal\subrequests\SubrequestsTree;
 use JsonSchema\Validator;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\SerializerAwareInterface;
@@ -121,7 +119,7 @@ class JsonBlueprintDenormalizer implements DenormalizerInterface, SerializerAwar
       $raw_item['body'] = Json::decode($raw_item['body']);
     }
     $raw_item['headers'] = !empty($raw_item['headers']) ? $raw_item['headers'] : [];
-    $raw_item['waitFor'] = !empty($raw_item['waitFor']) ? $raw_item['waitFor'] : '<ROOT>';
+    $raw_item['waitFor'] = !empty($raw_item['waitFor']) ? $raw_item['waitFor'] : ['<ROOT>'];
     $raw_item['_resolved'] = FALSE;
 
     return $raw_item;
@@ -175,19 +173,16 @@ class JsonBlueprintDenormalizer implements DenormalizerInterface, SerializerAwar
   public function buildExecutionSequence(array $parsed) {
     $sequence = new SubrequestsTree();
     $rooted_reqs = array_filter($parsed, function (Subrequest $item) {
-      return $item->waitFor === '<ROOT>';
+      return $item->waitFor === ['<ROOT>'];
     });
     $sequence->stack($rooted_reqs);
     $subreqs_with_unresolved_deps = array_values(
       array_filter($parsed, function (Subrequest $item) {
-        return $item->waitFor !== '<ROOT>';
+        return $item->waitFor !== ['<ROOT>'];
       })
     );
     $dependency_is_resolved = function (Subrequest $item) use ($sequence) {
-      $parent = array_filter($sequence->getLowestLevel(), function (Subrequest $dep) use ($item) {
-        return $dep->requestId === $item->waitFor;
-      });
-      return !empty($parent);
+      return empty(array_diff($item->waitFor, $sequence->allIds()));
     };
     while (count($subreqs_with_unresolved_deps)) {
       $no_deps = array_filter($subreqs_with_unresolved_deps, $dependency_is_resolved);

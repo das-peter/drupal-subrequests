@@ -35,7 +35,7 @@ class JsonPathReplacerTest extends UnitTestCase {
       'headers' => [],
       '_resolved' => FALSE,
       'body' => ['answer' => '{{foo.body@$.stuff}}'],
-      'waitFor' => 'foo',
+      'waitFor' => ['foo'],
     ]);
     $batch[] = new Subrequest([
       'uri' => '/dolor/{{foo.body@$.stuff}}',
@@ -44,7 +44,7 @@ class JsonPathReplacerTest extends UnitTestCase {
       'headers' => [],
       '_resolved' => FALSE,
       'body' => 'bar',
-      'waitFor' => 'foo',
+      'waitFor' => ['foo'],
     ]);
     $response = Response::create('{"things":["what","keep","talking"],"stuff":42}');
     $response->headers->set('Content-ID', '<foo>');

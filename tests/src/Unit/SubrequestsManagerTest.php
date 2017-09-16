@@ -65,7 +65,7 @@ class SubrequestsManagerTest extends UnitTestCase {
       'action' => 'view',
       'requestId' => 'foo',
       'headers' => [],
-      'waitFor' => '<ROOT>',
+      'waitFor' => ['<ROOT>'],
       '_resolved' => FALSE,
       'body' => 'bar',
     ]);
@@ -76,7 +76,7 @@ class SubrequestsManagerTest extends UnitTestCase {
       'headers' => [],
       '_resolved' => FALSE,
       'body' => [],
-      'waitFor' => 'foo',
+      'waitFor' => ['foo'],
     ]);
     $subrequests[] = new Subrequest([
       'uri' => 'dolor',
@@ -85,7 +85,7 @@ class SubrequestsManagerTest extends UnitTestCase {
       'headers' => [],
       '_resolved' => FALSE,
       'body' => 'bar',
-      'waitFor' => 'foo',
+      'waitFor' => ['foo'],
     ]);
     $tree->stack([$subrequests[0]]);
     $tree->stack([$subrequests[1], $subrequests[2]]);

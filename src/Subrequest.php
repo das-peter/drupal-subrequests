@@ -29,9 +29,9 @@ class Subrequest {
   public $headers;
 
   /**
-   * The parent subrequest.
+   * The parent subrequests.
    *
-   * @var string
+   * @var string[]
    */
   public $waitFor;
 

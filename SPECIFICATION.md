@@ -97,10 +97,10 @@ properties:
   * `body`: the serialized content of the body for the subrequest.
   * `headers`: an object of key value pairs. Each key **MUST** be interpreted as
     a header name for the subrequest, and the values as the header value.
-  * `waitFor`: contains the request ID from another request. Indicates that the
-    current subrequest depends on the other subrequest. When this property is
-    present, the that particular subrequest cannot be processed until the
-    referenced request has generated a response.
+  * `waitFor`: contains the array of request IDs from another request. Indicates
+    that the current subrequest depends on the other subrequest. When this
+    property is present, the that particular subrequest cannot be processed
+    until the referenced request has generated a response.
 
 ### Sequential requests
 Many times it is necessary to use the information of previous requests in order
@@ -166,7 +166,7 @@ the request blueprint to express dependencies.
   },
   {
     "requestId": "req-2",
-    "waitFor": "req-1",
+    "waitFor": ["req-1"],
     "uri": "/menus/{{req-1.body@$.rels.meny.id}}",
     "action": "view",
     "headers": {
@@ -175,7 +175,7 @@ the request blueprint to express dependencies.
   },
   {
     "requestId": "req-3",
-    "waitFor": "req-2",
+    "waitFor": ["req-2"],
     "uri": "/menus/{{req-1.body@$.rels.meny.id}}/courses/{{req-2.body@$.mainCourse.id}}",
     "action": "view",
     "headers": {
