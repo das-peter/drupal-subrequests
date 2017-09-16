@@ -45,13 +45,17 @@ class MultiresponseNormalizerTest extends UnitTestCase {
    * @covers ::normalize
    */
   public function testNormalize() {
-    $delimiter = $this->getRandomGenerator()->string();
+    $sub_content_type = $this->getRandomGenerator()->string();
     $data = [Response::create('Foo!'), Response::create('Bar')];
-    $actual = $this->sut->normalize($data, NULL, ['delimiter' => $delimiter]);
-    $this->assertStringStartsWith('--' . $delimiter, $actual);
-    $this->assertStringEndsWith('--' . $delimiter . '--', $actual);
-    $this->assertRegExp("/\r\nFoo!\r\n/", $actual);
-    $this->assertRegExp("/\r\nBar\r\n/", $actual);
+    $actual = $this->sut->normalize($data, NULL, ['sub-content-type' => $sub_content_type]);
+    $parts = explode(', ', $actual['headers']['Content-Type']);
+    $parts = explode('; ', $parts[0]);
+    parse_str($parts[1], $parts);
+    $delimiter = substr($parts['boundary'], 1, strlen($parts['boundary']) - 2);
+    $this->assertStringStartsWith('--' . $delimiter, $actual['content']);
+    $this->assertStringEndsWith('--' . $delimiter . '--', $actual['content']);
+    $this->assertRegExp("/\r\nFoo!\r\n/", $actual['content']);
+    $this->assertRegExp("/\r\nBar\r\n/", $actual['content']);
   }
 
 }

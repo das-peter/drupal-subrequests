@@ -23,3 +23,7 @@ services:
     class: Drupal\subrequests\Normalizer\MultiresponseNormalizer
     tags:
       - { name: normalizer, priority: 0 }
+  subrequests.normalizer.multiresponse_json:
+    class: Drupal\subrequests\Normalizer\MultiresponseJsonNormalizer
+    tags:
+      - { name: normalizer, priority: 0 }

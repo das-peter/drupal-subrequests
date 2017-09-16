@@ -57,7 +57,14 @@ class FrontController extends ControllerBase {
     }
     $tree = $this->blueprintManager->parse($data, $request);
     $responses = $this->subrequestsManager->request($tree);
-    return $this->blueprintManager->combineResponses($responses);
+    $master_request = $tree->getMasterRequest();
+    $output_format = $master_request->getRequestFormat();
+    if ($output_format === 'html') {
+      // Change the default format from html to multipart-related.
+      $output_format = 'multipart-related';
+    }
+    $master_request->getMimeType($output_format);
+    return $this->blueprintManager->combineResponses($responses, $output_format);
   }
 
 }

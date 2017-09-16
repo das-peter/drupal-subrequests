@@ -41,25 +41,19 @@ class BlueprintManager {
   /**
    * @param \Symfony\Component\HttpFoundation\Response[] $responses
    *   The responses to combine.
+   * @param string $format
+   *   The format to combine the responses on. Default is multipart/related.
    *
    * @return \Symfony\Component\HttpFoundation\Response
    *   The combined response with a 207.
    */
-  public function combineResponses(array $responses) {
-    $delimiter = md5(microtime());
-
-    // Prepare the root content type header.
-    $content_type = sprintf(
-      'multipart/related; boundary="%s", type=%s',
-      $delimiter,
-      $this->negotiateSubContentType($responses)
-    );
-    $headers = ['Content-Type' => $content_type];
-
-    $context = ['delimiter' => $delimiter];
+  public function combineResponses(array $responses, $format) {
+    $context = [
+      'sub-content-type' => $this->negotiateSubContentType($responses),
+    ];
     // Set the content.
-    $content = $this->serializer->normalize($responses, 'multipart-related', $context);
-    $response = CacheableResponse::create($content, 207, $headers);
+    $normalized = $this->serializer->normalize($responses, $format, $context);
+    $response = CacheableResponse::create($normalized['content'], 207, $normalized['headers']);
     // Set the cacheability metadata.
     $cacheable_responses = array_filter($responses, function ($response) {
       return $response instanceof CacheableResponseInterface;

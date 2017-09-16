@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\subrequests\Normalizer;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\subrequests\Normalizer\JsonSubrequestDenormalizer;
 use Drupal\subrequests\Subrequest;
 use Drupal\Tests\UnitTestCase;
@@ -42,7 +43,7 @@ class JsonSubrequestDenormalizerTest extends UnitTestCase {
     $request->setSession(new Session());
     $actual = $this->sut->denormalize($data, $class, NULL, ['master_request' => $request]);
     $this->assertSame('POST', $actual->getMethod());
-    $this->assertEquals(['bar' => 'foo'], $actual->getContent());
+    $this->assertEquals(['bar' => 'foo'], Json::decode($actual->getContent()));
     $this->assertSame('<oof>', $actual->headers->get('Content-ID'));
     $this->assertSame('lorem', $actual->headers->get('PHP_AUTH_USER'));
     $this->assertSame('ipsum', $actual->headers->get('PHP_AUTH_PW'));

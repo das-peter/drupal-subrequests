@@ -35,7 +35,7 @@ class BlueprintManagerTest extends UnitTestCase {
     $denormalizer->setSerializer(Argument::any())->willReturn(NULL);
     $normalizer = $this->prophesize(MultiresponseNormalizer::class);
     $normalizer->normalize(Argument::type('array'), 'multipart-related', Argument::type('array'))
-      ->willReturn('Booh!');
+      ->willReturn(['content' => 'Booh!', 'headers' => ['head' => 'Ha!']]);
     $normalizer->supportsNormalization(Argument::type('array'), 'multipart-related')
       ->willReturn([])->willReturn(TRUE);
     $serializer = new Serializer(
@@ -62,11 +62,9 @@ class BlueprintManagerTest extends UnitTestCase {
       Response::create('foo', 200, ['lorem' => 'ipsum', 'Content-Type' => 'sparrow']),
       Response::create('bar', 201, ['dolor' => 'sid', 'Content-Type' => 'sparrow']),
     ];
-    $combined = $this->sut->combineResponses($responses);
+    $combined = $this->sut->combineResponses($responses, 'multipart-related');
     $this->assertInstanceOf(CacheableResponse::class, $combined);
-    $content_type = $combined->headers->get('Content-Type');
-    $this->assertStringStartsWith('multipart/related; boundary="', $content_type);
-    $this->assertStringEndsWith('", type=sparrow', $content_type);
+    $this->assertSame('Ha!', $combined->headers->get('head'));
     $this->assertSame('Booh!', $combined->getContent());
   }
 
