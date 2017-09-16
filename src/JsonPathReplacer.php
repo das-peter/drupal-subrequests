@@ -84,20 +84,32 @@ class JsonPathReplacer {
    * @private
    */
   protected function doReplaceTokensInLocation(array $token_replacements, $tokenized_subrequest, $token_location) {
-    $index = 0;
     $replacements = [];
-    foreach ($token_replacements[$token_location] as $tokens) {
+    // For each subrequest, we need to replace all the tokens.
+    $tr = [];
+    // Go from the flat array with the $id_tuple to an array of arrays.
+    foreach ($token_replacements[$token_location] as $id_tuple => $key_val) {
+      list($req_id, $idx) = explode('::', $id_tuple);
+      $tr[$req_id] = empty($tr[$req_id]) ? [] : $tr[$req_id];
+      $tr[$req_id][$idx] = $key_val;
+    }
+    $points = $this->getPoints($tr);
+    $keys = array_keys($tr);
+    foreach ($points as $index => $point) {
       // Clone the subrequest.
       $cloned = clone $tokenized_subrequest;
       $cloned->requestId = sprintf(
         '%s#%s{%s}',
         $tokenized_subrequest->requestId,
-        $token_location, $index
+        $token_location,
+        $index
       );
-      $index++;
       // Now replace all the tokens in the request member (body or URI).
       $token_subject = $this->serializeMember($token_location, $cloned->{$token_location});
-      foreach ($tokens as $token => $value) {
+      foreach ($point as $axis => $position) {
+        $replacement_info = $tr[$keys[$axis]][$position];
+        $value = reset($replacement_info);
+        $token = key($replacement_info);
         $regexp = sprintf('/%s/', preg_quote($token), '/');
         $token_subject = preg_replace($regexp, $value, $token_subject);
       }
@@ -105,6 +117,41 @@ class JsonPathReplacer {
       array_push($replacements, $cloned);
     }
     return $replacements;
+  }
+
+  /**
+   * Generates a list of sets of coordinates for the token replacements.
+   *
+   * Each point (coordinates set) end up creating a new clone of the tokenized
+   * subrequest.
+   *
+   * @param array $tr
+   *   Token replacements array structure.
+   *
+   * @return array
+   *   The coordinates sets.
+   */
+  protected function getPoints($tr) {
+    $indices_matrix = array_reduce($tr, function ($carry, array $found_replacements) {
+      $carry[] = array_keys($found_replacements);
+      return $carry;
+    }, []);
+    $points = [];
+    foreach ($indices_matrix as $current) {
+      $new_points = [];
+      foreach ($current as $index) {
+        if (empty($points)) {
+          $new_points[] = [$index];
+        }
+        else {
+          foreach ($points as $coordinate_set) {
+            $new_points[] = array_merge($coordinate_set, [$index]);
+          }
+        }
+      }
+      $points = $new_points;
+    }
+    return $points;
   }
 
   /**
@@ -187,10 +234,11 @@ class JsonPathReplacer {
       $provided_id = preg_replace('/\.body$/', '', $match[1]);
       // Calculate what are the subjects to execute the JSONPath against.
       $subjects = array_filter($pool, function (Response $response) use ($provided_id) {
-        $content_id = preg_replace('/#.*/', '', $this->getContentId($response));
         // The response is considered a subject if it matches the content ID or
-        //  it is a generated copy based of that content ID.
-        return $content_id === $provided_id;
+        // it is a generated copy based of that content ID.
+        $pattern = sprintf('/%s(#.*)?/', preg_quote($provided_id));
+        $content_id = $this->getContentId($response);
+        return preg_match($pattern, $content_id);
       });
       if (count($subjects) === 0) {
         $candidates = array_map(function ($response) {
@@ -203,7 +251,9 @@ class JsonPathReplacer {
           implode(', ', $candidates)
         ));
       }
-      // Find the replacements for this match given a subject.
+      // Find the replacements for this match given a subject. If there is more
+      // than one response object (a subject) for a given subrequest, then we
+      // generate one parallel subrequest per subject.
       foreach ($subjects as $subject) {
         $this->addReplacementsForSubject($match, $subject, $token_replacements);
       }
@@ -275,7 +325,7 @@ class JsonPathReplacer {
     // The replacements need to be strings. If not, then the replacement
     // is not valid.
     $this->validateJsonPathReplacements($to_replace);
-    // Place all the replacement items in the tokenReplacements.
+    // Place all the replacement items in the $token_replacements.
     foreach ($to_replace as $index => $replacement_token_value) {
       // Set the match for the Response ID + match item.
       $id_tuple = implode('::', [
