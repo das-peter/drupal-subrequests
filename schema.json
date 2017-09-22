@@ -35,8 +35,7 @@
         "uri": {
           "title": "URI",
           "description": "The URI where to make the subrequest.",
-          "type": "string",
-          "format": "uri"
+          "type": "string"
         },
         "requestId": {
           "title": "Request ID",
