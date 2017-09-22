@@ -186,12 +186,11 @@ class JsonBlueprintDenormalizer implements DenormalizerInterface, SerializerAwar
     };
     while (count($subreqs_with_unresolved_deps)) {
       $no_deps = array_filter($subreqs_with_unresolved_deps, $dependency_is_resolved);
-      $sequence->stack($no_deps);
-      $diff = array_diff($subreqs_with_unresolved_deps, $no_deps);
       if (empty($no_deps)) {
         throw new BadRequestHttpException('Waiting for unresolvable request. Abort.');
       }
-      $subreqs_with_unresolved_deps = $diff;
+      $sequence->stack($no_deps);
+      $subreqs_with_unresolved_deps = array_diff($subreqs_with_unresolved_deps, $no_deps);
     }
     return $sequence;
   }
