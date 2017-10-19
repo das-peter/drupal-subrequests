@@ -59,7 +59,7 @@ class JsonBlueprintDenormalizerTest extends UnitTestCase {
       'waitFor' => ['foo'],
     ];
     $subrequests[] = [
-      'uri' => 'lorem',
+      'uri' => 'lorem%3F%7B%7Bipsum%7D%7D', // lorem?{{ipsum}}
       'action' => 'create',
       'requestId' => 'oof',
       'body' => '"bar"',
@@ -70,7 +70,16 @@ class JsonBlueprintDenormalizerTest extends UnitTestCase {
     $tree->stack([new Subrequest(['waitFor' => ['<ROOT>'], '_resolved' => FALSE, 'body' => 'bar'] + $subrequests[0])]);
     $tree->stack([
       new Subrequest(['headers' => [], '_resolved' => FALSE, 'body' => []] + $subrequests[1]),
-      new Subrequest(['headers' => [], '_resolved' => FALSE, 'body' => 'bar'] + $subrequests[2])
+      // Make sure the URL is decoded so we can perform apply regular
+      // expressions to it.
+      new Subrequest(
+        [
+          'headers' => [],
+          '_resolved' => FALSE,
+          'body' => 'bar',
+          'uri' => 'lorem?{{ipsum}}'
+        ] + $subrequests[2]
+      )
     ]);
     $this->assertEquals($tree, $actual);
   }

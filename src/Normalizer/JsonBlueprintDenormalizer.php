@@ -122,6 +122,15 @@ class JsonBlueprintDenormalizer implements DenormalizerInterface, SerializerAwar
     $raw_item['waitFor'] = !empty($raw_item['waitFor']) ? $raw_item['waitFor'] : ['<ROOT>'];
     $raw_item['_resolved'] = FALSE;
 
+    // Detect if there is an encoded token. If so, then decode the URI.
+    if (
+      !empty($raw_item['uri']) &&
+      strpos($raw_item['uri'], '%7B%7B') !== FALSE &&
+      strpos($raw_item['uri'], '%7D%7D') !== FALSE
+    ) {
+      $raw_item['uri'] = urldecode($raw_item['uri']);
+    }
+
     return $raw_item;
   }
 
