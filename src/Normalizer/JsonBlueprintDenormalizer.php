@@ -115,9 +115,13 @@ class JsonBlueprintDenormalizer implements DenormalizerInterface, SerializerAwar
       $uuid = new Php();
       $raw_item['requestId'] = $uuid->generate();
     }
-    if (!empty($raw_item['body'])) {
+    if (!isset($raw_item['body'])) {
+      $raw_item['body'] = NULL;
+    }
+    elseif (!empty($raw_item['body'])) {
       $raw_item['body'] = Json::decode($raw_item['body']);
     }
+
     $raw_item['headers'] = !empty($raw_item['headers']) ? $raw_item['headers'] : [];
     $raw_item['waitFor'] = !empty($raw_item['waitFor']) ? $raw_item['waitFor'] : ['<ROOT>'];
     $raw_item['_resolved'] = FALSE;
