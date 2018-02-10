@@ -41,6 +41,8 @@ class BlueprintManagerTest extends UnitTestCase {
       ->willReturn(['content' => 'Booh!', 'headers' => ['head' => 'Ha!']]);
     $normalizer->supportsNormalization(Argument::type('array'), 'multipart-related')
       ->willReturn([])->willReturn(TRUE);
+    $normalizer->supportsNormalization(Argument::type('array'), 'multipart-related', Argument::type('array'))
+      ->willReturn([])->willReturn(TRUE);
     $serializer = new Serializer(
       [$denormalizer->reveal(), $normalizer->reveal()],
       [new JsonDecode()]
