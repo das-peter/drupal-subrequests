@@ -43,6 +43,9 @@ class SubrequestsManagerTest extends UnitTestCase {
     $denormalizer
       ->supportsDenormalization(Argument::type(Subrequest::class), Request::class, NULL)
       ->willReturn([])->willReturn(TRUE);
+    $denormalizer
+      ->supportsDenormalization(Argument::type(Subrequest::class), Request::class, NULL, Argument::type('array'))
+      ->willReturn([])->willReturn(TRUE);
     $serializer = new Serializer(
       [$denormalizer->reveal()],
       [new JsonDecode()]
