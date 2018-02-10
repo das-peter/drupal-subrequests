@@ -31,10 +31,30 @@ class JsonBlueprintDenormalizer implements DenormalizerInterface, SerializerAwar
    */
   protected $logger;
 
+  /**
+   * The schema validator.
+   *
+   * This property will only be set if the validator library is available.
+   *
+   * @var \JsonSchema\Validator|null
+   */
+  protected $validator;
+
   public function __construct(LoggerInterface $logger) {
     $this->logger = $logger;
   }
 
+  /**
+   * Sets the validator service if available.
+   */
+  public function setValidator(Validator $validator = NULL) {
+    if ($validator) {
+      $this->validator = $validator;
+    }
+    elseif (class_exists(Validator::class)) {
+      $this->validator = new Validator();
+    }
+  }
 
   /**
    * {@inheritdoc}
@@ -50,10 +70,7 @@ class JsonBlueprintDenormalizer implements DenormalizerInterface, SerializerAwar
    * {@inheritdoc}
    */
   public function denormalize($data, $class, $format = NULL, array $context = []) {
-    assert(
-      '$this->validateInput($data)',
-      'The input blueprint failed validation (see the logs for details). Please report this in the issue queue on drupal.org'
-    );
+    $this->doValidateInput($data);
     $data = array_map([$this, 'fillDefaults'], $data);
     $subrequests = array_map(function ($item) {
       return new Subrequest($item);
@@ -138,6 +155,18 @@ class JsonBlueprintDenormalizer implements DenormalizerInterface, SerializerAwar
     return $raw_item;
   }
 
+
+  /**
+   * Wraps validation in an assert to prevent execution in production.
+   *
+   * @see self::validateInput
+   */
+  public function doValidateInput($input) {
+    if (PHP_MAJOR_VERSION >= 7 || assert_options(ASSERT_ACTIVE)) {
+      assert($this->validateInput($input), 'A Subrequests blueprint failed validation (see the logs for details). Please report this in the issue queue on drupal.org');
+    }
+  }
+
   /**
    * Validates a response against the JSON API specification.
    *
@@ -148,26 +177,26 @@ class JsonBlueprintDenormalizer implements DenormalizerInterface, SerializerAwar
    *   FALSE if the input failed validation, otherwise TRUE.
    */
   protected function validateInput($input) {
-    if (!class_exists("\\JsonSchema\\Validator")) {
+    // If the validator isn't set, then the validation library is not installed.
+    if (!$this->validator) {
       return TRUE;
     }
 
-    $validator = new Validator();
     $schema_path = dirname(dirname(__DIR__)) . '/schema.json';
 
-    $validator->check($input, (object) ['$ref' => 'file://' . $schema_path]);
+    $this->validator->check($input, (object) ['$ref' => 'file://' . $schema_path]);
 
-    if (!$validator->isValid()) {
+    if (!$this->validator->isValid()) {
       // Log any potential errors.
       $this->logger->debug('Response failed validation: @data', [
         '@data' => Json::encode($input),
       ]);
       $this->logger->debug('Validation errors: @errors', [
-        '@errors' => Json::encode($validator->getErrors()),
+        '@errors' => Json::encode($this->validator->getErrors()),
       ]);
     }
 
-    return $validator->isValid();
+    return $this->validator->isValid();
   }
 
   /**
