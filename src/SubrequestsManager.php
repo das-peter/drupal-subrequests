@@ -59,13 +59,14 @@ class SubrequestsManager {
      // Perform all the necessary replacements for the elements in the batch.
      $batch = $this->replacer->replaceBatch($batch, $_responses);
      $results = array_map(function (Subrequest $subrequest) use ($tree) {
+       $master_request = $tree->getMasterRequest();
        // Create a Symfony Request object based on the Subrequest.
        /** @var \Symfony\Component\HttpFoundation\Request $request */
        $request = $this->serializer->denormalize(
          $subrequest,
          Request::class,
          NULL,
-         ['master_request' => $tree->getMasterRequest()]
+         ['master_request' => $master_request]
        );
        $response = $this->httpKernel
          ->handle($request, HttpKernelInterface::MASTER_REQUEST);

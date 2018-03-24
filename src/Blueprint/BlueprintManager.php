@@ -35,6 +35,8 @@ class BlueprintManager {
     $output = $this->serializer
       ->deserialize($input, SubrequestsTree::class, 'json');
     $output->setMasterRequest($request);
+    // Forward the Host header to place nice with decoupled routers.
+    $this->forwardHeader('host', $request, $output);
     return $output;
   }
 
@@ -90,6 +92,28 @@ class BlueprintManager {
       return $carry;
     });
     return $output ?: 'application/json';
+  }
+
+  /**
+   * Forward the master request's header to the subrequest.
+   *
+   * @param string $name
+   *   The header name to forward.
+   * @param \Symfony\Component\HttpFoundation\Request $from
+   *   The request to copy headers from.
+   * @param \Drupal\subrequests\SubrequestsTree $tree
+   *   The target request to copy headers to.
+   */
+  protected function forwardHeader($name, Request $from, SubrequestsTree $tree) {
+    foreach ($tree as $level) {
+      foreach ($level as $subrequest) {
+        /** @var $subrequest \Drupal\subrequests\Subrequest */
+        if (isset($subrequest->headers[$name])) {
+          continue;
+        }
+        $subrequest->headers[$name] = $from->headers->get($name);
+      }
+    }
   }
 
 }
