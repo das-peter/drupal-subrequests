@@ -6,7 +6,7 @@
     "skyscanner/jsonpath": "^1.0"
   },
   "require-dev": {
-    "justinrainbow/json-schema": "^4.1"
+    "justinrainbow/json-schema": "^5.2"
   },
   "license": "GPL-2.0+",
   "authors": [
